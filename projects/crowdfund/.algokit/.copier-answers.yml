@@ -1,0 +1,10 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_commit: 1.8.0
+_src_path: gh:algorandfoundation/algokit-python-template
+author_email: thisgleam@gmail.com
+author_name: thisgleammm
+contract_name: crowdfund
+deployment_language: python
+preset_name: starter
+project_name: crowdfund
+
