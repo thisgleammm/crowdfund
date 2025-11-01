@@ -1,4 +1,5 @@
 import logging
+import time
 
 import algokit_utils
 
@@ -8,7 +9,7 @@ logger = logging.getLogger(__name__)
 # define deployment behaviour based on supplied app spec
 def deploy() -> None:
     from smart_contracts.artifacts.crowdfund.crowdfund_client import (
-        HelloArgs,
+        CreateCampaignArgs,
         CrowdfundFactory,
     )
 
@@ -36,9 +37,14 @@ def deploy() -> None:
             )
         )
 
-    name = "world"
-    response = app_client.send.hello(args=HelloArgs(name=name))
+    # Create a sample campaign for testing
+    goal_microalgos = 5_000_000  # 5 ALGO
+    deadline_timestamp = int(time.time() + 86400)  # 24 hours from now
+    
+    response = app_client.send.create_campaign(
+        args=CreateCampaignArgs(goal=goal_microalgos, deadline_timestamp=deadline_timestamp)
+    )
     logger.info(
-        f"Called hello on {app_client.app_name} ({app_client.app_id}) "
-        f"with name={name}, received: {response.abi_return}"
+        f"Created campaign on {app_client.app_name} ({app_client.app_id}) "
+        f"with goal=5 ALGO, deadline={deadline_timestamp}, received: {response.abi_return}"
     )

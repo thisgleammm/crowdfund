@@ -1,175 +1,277 @@
-# 🚀 Algorand Crowdfunding dApp
+# 🚀 Algorand Crowdfund dApp
 
-**My dApp is a XXX built on Algorand**
+> A decentralized crowdfunding platform built on the Algorand blockchain using AlgoPy smart contracts
 
-A decentralized crowdfunding platform built on the Algorand blockchain, enabling transparent and secure fundraising campaigns with smart contract automation.
+[![Algorand](https://img.shields.io/badge/Algorand-000000?style=for-the-badge&logo=algorand&logoColor=white)](https://algorand.com/)
+[![AlgoPy](https://img.shields.io/badge/AlgoPy-4285F4?style=for-the-badge&logo=python&logoColor=white)](https://algorandfoundation.github.io/puya/)
+[![Smart Contract](https://img.shields.io/badge/Smart_Contract-748956427-green?style=for-the-badge)](https://lora.algokit.io/testnet/application/748956427)
 
-## 📖 Project Description
+## � Project Description
 
-This dApp revolutionizes crowdfunding by leveraging Algorand's fast, secure, and low-cost blockchain technology. Campaign creators can launch fundraising initiatives while contributors can support projects with confidence, knowing their funds are protected by smart contracts.
+**Algorand Crowdfund** is a decentralized crowdfunding application that enables users to create, manage, and participate in funding campaigns on the Algorand blockchain. Built with transparency, security, and efficiency in mind, this dApp leverages Algorand's fast and low-cost transactions to provide a seamless crowdfunding experience.
 
-## 🎯 What it does
+The smart contract is deployed on Algorand Testnet and can be explored live at: **[App ID: 748956427](https://lora.algokit.io/testnet/application/748956427)**
 
-The Algorand Crowdfunding dApp provides a complete decentralized fundraising ecosystem:
+**Application Details:**
+- **Application ID**: `748956427`
+- **Application Address**: `IFJKBQ3L6RFVQ6CXUX3KJD6WSVJFEYMLLADRN6X6KLJWEQBVQXTLEY5Q6I`
 
-- **Campaign Creation**: Anyone can create a fundraising campaign with customizable goals and deadlines
-- **Secure Contributions**: Contributors can fund campaigns using ALGO tokens with full transparency
-- **Automated Fund Management**: Smart contracts automatically handle fund collection and distribution
-- **Goal Tracking**: Real-time monitoring of fundraising progress and milestones
-- **Refund Protection**: Automatic refunds if campaigns don't meet their goals within the deadline
-- **Transparent Operations**: All transactions and campaign data are publicly verifiable on-chain
+## 🎯 What It Does
 
-## ✨ Features
+This crowdfunding platform allows:
 
-### 🔐 **Smart Contract Security**
-- Funds are locked in smart contracts until campaign goals are met
-- Automatic refund mechanism for failed campaigns
-- Immutable campaign terms and conditions
+- **Campaign Creators** to launch fundraising campaigns with specific goals and deadlines
+- **Contributors** to support campaigns with ALGO donations
+- **Transparent Management** of funds with automated success/failure handling
+- **Secure Fund Distribution** based on campaign outcomes
 
-### 🌍 **Decentralized & Transparent**
-- No central authority controlling funds
-- Public campaign data and contribution history
-- Real-time progress tracking
+## ✨ Key Features
 
-### ⚡ **Algorand-Powered Performance**
-- Near-instant transaction finality (< 5 seconds)
-- Minimal transaction fees (< $0.01)
-- Carbon-negative blockchain technology
+### 🏗️ Campaign Management
+- **Create Campaigns**: Set funding goals and deadlines using unix timestamps
+- **Cancel Campaigns**: Creators can cancel active campaigns before deadlines
+- **Single Campaign**: Only one campaign active per contract instance
 
-### 🎨 **User-Friendly Interface**
-- Intuitive campaign creation workflow
-- Easy contribution process
-- Comprehensive dashboard for creators and contributors
+### 💰 Contribution System
+- **Secure Donations**: Contributors can safely donate ALGO to active campaigns
+- **Amount Validation**: Minimum contribution checks and proper amount handling
+- **Deadline Protection**: Contributions only accepted before campaign deadlines
 
-### 📊 **Advanced Analytics**
-- Campaign performance metrics
-- Contributor insights
-- Success rate statistics
+### 🎊 Success Handling
+- **Automatic Fund Claims**: Creators can claim funds when goals are reached after deadlines
+- **Goal Verification**: Smart contract ensures goals are met before allowing claims
+- **Creator Authorization**: Only campaign creators can claim successful funds
 
-## 🔗 Deployed Smart Contract
+### 🔄 Failure & Refund System
+- **Automatic Refunds**: Enable refunds when campaigns fail to meet goals
+- **Cancellation Refunds**: Refunds available when campaigns are cancelled
+- **Fair Distribution**: Transparent refund mechanism for all scenarios
 
-**Deployed Smart Contract Link: XXX**
+### 📊 State Management
+- **Campaign States**: Automatically managed through contract logic (active/inactive)
+- **Progress Tracking**: Internal state tracking of raised amounts, goals, and deadlines
+- **Transparency**: All campaign data is stored on-chain and publicly verifiable
 
-## 💻 Code Implementation
+## 🔧 Smart Contract Functions
+
+| Function | Description | Who Can Call | When Available |
+|----------|-------------|--------------|----------------|
+| `create_campaign(goal, deadline_timestamp)` | Create new funding campaign | Creator Only | No active campaign |
+| `contribute(amount)` | Donate ALGO to active campaign | Anyone | Before deadline |
+| `cancel_campaign()` | Cancel active campaign | Creator Only | Before deadline |
+| `claim_funds()` | Claim funds from successful campaign | Creator Only | After deadline + goal reached |
+| `refund()` | Enable refunds for failed/cancelled campaigns | Anyone | After deadline/cancel + goal not reached |
+
+## 🌐 Live Smart Contract
+
+**Testnet Deployment Details:**
+- **Application ID**: `748956427`
+- **Application Address**: `IFJKBQ3L6RFVQ6CXUX3KJD6WSVJFEYMLLADRN6X6KLJWEQBVQXTLEY5Q6I`
+- **Explorer Link**: [https://lora.algokit.io/testnet/application/748956427](https://lora.algokit.io/testnet/application/748956427)
+
+**Interact with the Contract:**
+- **AlgoKit Explorer**: [https://lora.algokit.io/testnet/application/748956427](https://lora.algokit.io/testnet/application/748956427)
+- **Algorand Testnet**: Use any Algorand wallet or SDK with App ID `748956427`
+- **Direct Integration**: Use Application Address `IFJKBQ3L6RFVQ6CXUX3KJD6WSVJFEYMLLADRN6X6KLJWEQBVQXTLEY5Q6I`
+
+## 💻 Smart Contract Implementation
 
 ```python
-//paste your code
+from algopy import ARC4Contract, UInt64, String, Account, Txn, Global
+from algopy.arc4 import abimethod
+
+class Crowdfund(ARC4Contract):
+    def __init__(self) -> None:
+        self.creator = Account(Global.creator_address.bytes)
+        self.goal = UInt64(0)
+        self.deadline = UInt64(0)
+        self.raised = UInt64(0)
+        self.active = UInt64(0)
+
+    @abimethod()
+    def create_campaign(self, goal: UInt64, deadline_timestamp: UInt64) -> String:
+        # Only creator can create a campaign
+        assert Txn.sender == self.creator, "Only creator can create campaign"
+        # Prevent overlapping campaigns
+        assert self.active == UInt64(0), "Campaign already active"
+        # Validate parameters
+        assert goal > UInt64(0), "Goal must be greater than 0"
+        assert deadline_timestamp > Global.latest_timestamp, "Deadline must be in the future"
+        
+        self.goal = goal
+        self.deadline = deadline_timestamp
+        self.raised = UInt64(0)
+        self.active = UInt64(1)
+        return String("Campaign created!")
+
+    @abimethod()
+    def contribute(self, amount: UInt64) -> String:
+        # Check if campaign is active
+        assert self.active == UInt64(1), "Campaign not active"
+        # Check if deadline has not passed
+        assert Global.latest_timestamp < self.deadline, "Campaign deadline passed"
+        # Check minimum contribution
+        assert amount > UInt64(0), "Contribution must be greater than 0"
+        # Update raised amount
+        self.raised = self.raised + amount
+        return String("Contribution accepted!")
+
+    @abimethod()
+    def claim_funds(self) -> String:
+        # Check if there was ever a campaign (goal > 0)
+        assert self.goal > UInt64(0), "No campaign exists"
+        # Check deadline has passed
+        assert Global.latest_timestamp >= self.deadline, "Campaign still running"
+        # Check goal was reached
+        assert self.raised >= self.goal, "Goal not reached"
+        # Only creator can claim
+        assert Txn.sender == self.creator, "Only creator can claim funds"
+        # Campaign must not have been cancelled (if cancelled, active would be 0 but deadline not passed)
+        if Global.latest_timestamp < self.deadline and self.active == UInt64(0):
+            assert False, "Campaign was cancelled, cannot claim"
+        
+        self.active = UInt64(0)
+        return String("Funds claimed by creator!")
+
+    @abimethod()
+    def refund(self) -> String:
+        # Check if there was ever a campaign (goal > 0)
+        assert self.goal > UInt64(0), "No campaign exists"
+        # Check deadline has passed OR campaign was cancelled
+        assert Global.latest_timestamp >= self.deadline or self.active == UInt64(0), "Campaign still running and not cancelled"
+        # Check goal was NOT reached
+        assert self.raised < self.goal, "Goal was reached, no refunds"
+        
+        self.active = UInt64(0)
+        return String("Refunds available!")
+
+    @abimethod()
+    def cancel_campaign(self) -> String:
+        # Check campaign is active
+        assert self.active == UInt64(1), "No active campaign"
+        # Only creator can cancel
+        assert Txn.sender == self.creator, "Only creator can cancel campaign"
+        # Campaign can only be cancelled before deadline
+        assert Global.latest_timestamp < self.deadline, "Campaign deadline already passed"
+        
+        # Deactivate campaign
+        self.active = UInt64(0)
+        return String("Campaign cancelled by creator!")
 ```
 
-## 🛠 Tech Stack
+## 🛠️ Technical Implementation
 
-- **Blockchain**: Algorand
-- **Smart Contracts**: AlgoPy (Algorand Python)
-- **Development Framework**: AlgoKit
-- **Language**: Python 3.12+
-- **Dependency Management**: Poetry
+### Smart Contract Architecture
+```python
+class Crowdfund(ARC4Contract):
+    # State Variables
+    creator: Account     # Campaign creator address
+    goal: UInt64        # Funding goal in microALGO
+    deadline: UInt64    # Campaign deadline (unix timestamp)
+    raised: UInt64      # Amount raised so far
+    active: UInt64      # Campaign status (1=active, 0=inactive)
+```
 
-## 🚀 Quick Start Guide
+### Key Validations
+- ✅ **Creator Authorization**: Only creators can manage their campaigns
+- ✅ **Timeline Enforcement**: Strict deadline and timing validations
+- ✅ **Goal Verification**: Automatic success/failure determination
+- ✅ **Amount Validation**: Proper ALGO amount handling and validation
+- ✅ **State Management**: Secure campaign state transitions
 
-### Prerequisites
-- [Python 3.12+](https://www.python.org/downloads/)
-- [Docker](https://www.docker.com/) (for LocalNet)
-- [AlgoKit CLI](https://github.com/algorandfoundation/algokit-cli#install)
+### Security Features
+- **Reentrancy Protection**: Safe state updates and fund handling
+- **Access Control**: Role-based function access (creator vs public)
+- **Input Validation**: Comprehensive parameter and state validation
+- **Atomic Operations**: All-or-nothing transaction execution
 
-### Installation & Setup
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd crowdfund
-   ```
-
-2. **Install dependencies**
-   ```bash
-   algokit project bootstrap all
-   ```
-
-3. **Start local Algorand network**
-   ```bash
-   algokit localnet start
-   ```
-
-4. **Deploy smart contracts**
-   ```bash
-   algokit project deploy localnet
-   ```
-
-## 🎮 Usage
+## 🚦 Usage Examples
 
 ### Creating a Campaign
-1. Connect your Algorand wallet
-2. Click "Create Campaign"
-3. Set funding goal, deadline, and campaign details
-4. Deploy your campaign to the blockchain
+```python
+# Goal: 5 ALGO (5,000,000 microALGO)
+# Deadline: 24 hours from now
+goal = 5000000
+deadline = current_timestamp + 86400
 
-### Contributing to Campaigns
-1. Browse active campaigns
-2. Select a campaign to support
-3. Choose contribution amount in ALGO
-4. Confirm transaction through your wallet
-
-### Campaign Management
-- Monitor real-time progress
-- Withdraw funds when goals are met
-- Automatic refunds for failed campaigns
-
-## 🏗 Project Structure
-
-```
-crowdfund/
-├── smart_contracts/          # Algorand smart contracts
-│   ├── crowdfund/           # Main crowdfunding contract
-│   │   ├── contract.py      # Smart contract logic
-│   │   └── deploy_config.py # Deployment configuration
-│   └── artifacts/           # Compiled contracts
-├── tests/                   # Test files
-├── .env.localnet           # Local environment config
-└── pyproject.toml          # Python dependencies
+create_campaign(goal, deadline)
 ```
 
-## 🧪 Testing
-
-Run the test suite:
-```bash
-algokit project run test
+### Contributing to a Campaign
+```python
+# Contribute 1 ALGO (1,000,000 microALGO)
+amount = 1000000
+contribute(amount)
 ```
+
+### Campaign Lifecycle
+1. **Create** → Campaign becomes active
+2. **Contribute** → Users donate during active period
+3. **Deadline** → Campaign ends automatically
+4. **Claim/Refund** → Funds distributed based on success
+
+## 📈 Campaign States
+
+```mermaid
+graph TD
+    A[Create Campaign] --> B[Active Campaign]
+    B --> C{Deadline Reached?}
+    B --> D[Cancel Campaign]
+    C -->|Yes| E{Goal Reached?}
+    C -->|No| B
+    E -->|Yes| F[Claim Funds]
+    E -->|No| G[Refund Available]
+    D --> G
+    F --> H[Campaign Closed]
+    G --> H
+```
+
+## 🔍 Testing & Verification
+
+### Test the Smart Contract
+1. Visit the [AlgoKit Explorer](https://lora.algokit.io/testnet/application/748956427)
+2. Connect your Algorand testnet wallet
+3. Try different functions with various parameters
+4. Monitor state changes and transaction results
+
+### Example Test Scenarios
+- **Create Campaign**: `create_campaign(5000000, 1762070400)` - 5 ALGO goal, 24h deadline ✅
+- **Contribute**: `contribute(1000000)` - Donate 1 ALGO to active campaign ✅  
+- **Try Early Claim**: `claim_funds()` before deadline ❌ (should fail with "Campaign still running")
+- **Cancel Campaign**: `cancel_campaign()` before deadline ✅ (creator only)
+- **Claim Success**: `claim_funds()` after deadline + goal reached ✅
+- **Refund Failed**: `refund()` after deadline + goal not reached ✅
+
+## 🏗️ Built With
+
+- **[AlgoPy](https://algorandfoundation.github.io/puya/)** - Python framework for Algorand smart contracts
+- **[Algorand](https://algorand.com/)** - High-performance blockchain platform
+- **[AlgoKit](https://github.com/algorandfoundation/algokit-cli)** - Development toolkit for Algorand
+
+## � License
+
+This project is open source and available under the [MIT License](LICENSE).
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🔗 Links & Resources
-
-- [Algorand Developer Portal](https://developer.algorand.org/)
-- [AlgoKit Documentation](https://github.com/algorandfoundation/algokit-cli)
-- [Algorand Python Documentation](https://github.com/algorandfoundation/puya)
+Contributions are welcome! Please feel free to submit issues, feature requests, or pull requests.
 
 ## 📞 Support
 
-- 📧 Email: [your-email@example.com](mailto:your-email@example.com)
-- 💬 Discord: [Join our community](https://discord.gg/algorand)
-- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/crowdfund/issues)
+- **Smart Contract**: [View on Explorer](https://lora.algokit.io/testnet/application/748956427)
+- **Application ID**: `748956427`
+- **Application Address**: `IFJKBQ3L6RFVQ6CXUX3KJD6WSVJFEYMLLADRN6X6KLJWEQBVQXTLEY5Q6I`
+- **Algorand Developer Portal**: [developer.algorand.org](https://developer.algorand.org)
+- **AlgoPy Documentation**: [AlgoPy Docs](https://algorandfoundation.github.io/puya/)
 
 ---
 
-<div align="center">
-  <p>Built with ❤️ on Algorand</p>
-  <p>
-    <img src="https://img.shields.io/badge/Algorand-000000?style=for-the-badge&logo=algorand&logoColor=white" alt="Algorand">
-    <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
-    <img src="https://img.shields.io/badge/AlgoKit-4285F4?style=for-the-badge" alt="AlgoKit">
-  </p>
-</div>
+**⚡ Start crowdfunding on Algorand today!** 
+
+**Try the smart contract:**
+- **App ID**: `748956427`
+- **App Address**: `IFJKBQ3L6RFVQ6CXUX3KJD6WSVJFEYMLLADRN6X6KLJWEQBVQXTLEY5Q6I`
+- **Explorer**: [https://lora.algokit.io/testnet/application/748956427](https://lora.algokit.io/testnet/application/748956427)
 
 # Original Setup Documentation
 

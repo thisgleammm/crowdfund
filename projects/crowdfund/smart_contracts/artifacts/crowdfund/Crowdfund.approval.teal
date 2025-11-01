@@ -3,67 +3,369 @@
 
 // algopy.arc4.ARC4Contract.approval_program() -> uint64:
 main:
-    // smart_contracts/crowdfund/contract.py:5
+    intcblock 0 1 8
+    bytecblock "active" "deadline" "raised" "goal" "creator"
+    txn ApplicationID
+    bnz main_after_if_else@2
+    // smart_contracts/crowdfund/contract.py:6
+    // self.creator = Account(Global.creator_address.bytes)
+    bytec 4 // "creator"
+    global CreatorAddress
+    app_global_put
+    // smart_contracts/crowdfund/contract.py:7
+    // self.goal = UInt64(0)
+    bytec_3 // "goal"
+    intc_0 // 0
+    app_global_put
+    // smart_contracts/crowdfund/contract.py:8
+    // self.deadline = UInt64(0)
+    bytec_1 // "deadline"
+    intc_0 // 0
+    app_global_put
+    // smart_contracts/crowdfund/contract.py:9
+    // self.raised = UInt64(0)
+    bytec_2 // "raised"
+    intc_0 // 0
+    app_global_put
+    // smart_contracts/crowdfund/contract.py:10
+    // self.active = UInt64(0)
+    bytec_0 // "active"
+    intc_0 // 0
+    app_global_put
+
+main_after_if_else@2:
+    // smart_contracts/crowdfund/contract.py:4
     // class Crowdfund(ARC4Contract):
     txn NumAppArgs
-    bz main___algopy_default_create@5
-    pushbytes 0x02bece11 // method "hello(string)string"
-    txna ApplicationArgs 0
-    match main_hello_route@3
-    err
-
-main_hello_route@3:
-    // smart_contracts/crowdfund/contract.py:6
-    // @abimethod()
+    bz main___algopy_default_create@14
     txn OnCompletion
     !
+    assert // OnCompletion must be NoOp
     txn ApplicationID
-    &&
-    assert // OnCompletion must be NoOp && can only call when not creating
-    b hello
+    assert
+    pushbytess 0x49874e05 0x32db69e6 0x2ce83367 0xf4ccfc1d 0x2a360c7f // method "create_campaign(uint64,uint64)string", method "contribute(uint64)string", method "claim_funds()string", method "refund()string", method "cancel_campaign()string"
+    txna ApplicationArgs 0
+    match create_campaign contribute claim_funds refund cancel_campaign
+    err
 
-main___algopy_default_create@5:
+main___algopy_default_create@14:
     txn OnCompletion
     !
     txn ApplicationID
     !
     &&
     assert // OnCompletion must be NoOp && can only call when creating
-    pushint 1 // 1
+    intc_1 // 1
     return
 
 
-// smart_contracts.crowdfund.contract.Crowdfund.hello[routing]() -> void:
-hello:
-    // smart_contracts/crowdfund/contract.py:6
+// smart_contracts.crowdfund.contract.Crowdfund.create_campaign[routing]() -> void:
+create_campaign:
+    // smart_contracts/crowdfund/contract.py:12
     // @abimethod()
     txna ApplicationArgs 1
     dup
-    pushint 0 // 0
-    extract_uint16 // on error: invalid array length header
-    pushint 2 // 2
-    +
-    dig 1
     len
+    intc_2 // 8
     ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
-    extract 2 0
-    // smart_contracts/crowdfund/contract.py:8
-    // return "Hello, " + name
-    pushbytes "Hello, "
-    swap
-    concat
-    // smart_contracts/crowdfund/contract.py:6
-    // @abimethod()
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
     dup
     len
-    itob
-    extract 6 2
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    // smart_contracts/crowdfund/contract.py:14-15
+    // # Only creator can create a campaign
+    // assert Txn.sender == self.creator, "Only creator can create campaign"
+    txn Sender
+    intc_0 // 0
+    bytec 4 // "creator"
+    app_global_get_ex
+    assert // check self.creator exists
+    ==
+    assert // Only creator can create campaign
+    // smart_contracts/crowdfund/contract.py:16-17
+    // # Prevent overlapping campaigns
+    // assert self.active == UInt64(0), "Campaign already active"
+    intc_0 // 0
+    bytec_0 // "active"
+    app_global_get_ex
+    assert // check self.active exists
+    !
+    assert // Campaign already active
+    // smart_contracts/crowdfund/contract.py:18-19
+    // # Validate parameters
+    // assert goal > UInt64(0), "Goal must be greater than 0"
+    dig 1
+    assert // Goal must be greater than 0
+    // smart_contracts/crowdfund/contract.py:20
+    // assert deadline_timestamp > Global.latest_timestamp, "Deadline must be in the future"
+    dup
+    global LatestTimestamp
+    >
+    assert // Deadline must be in the future
+    // smart_contracts/crowdfund/contract.py:22
+    // self.goal = goal
+    bytec_3 // "goal"
+    uncover 2
+    app_global_put
+    // smart_contracts/crowdfund/contract.py:23
+    // self.deadline = deadline_timestamp
+    bytec_1 // "deadline"
     swap
-    concat
-    pushbytes 0x151f7c75
-    swap
-    concat
+    app_global_put
+    // smart_contracts/crowdfund/contract.py:24
+    // self.raised = UInt64(0)
+    bytec_2 // "raised"
+    intc_0 // 0
+    app_global_put
+    // smart_contracts/crowdfund/contract.py:25
+    // self.active = UInt64(1)
+    bytec_0 // "active"
+    intc_1 // 1
+    app_global_put
+    // smart_contracts/crowdfund/contract.py:12
+    // @abimethod()
+    pushbytes 0x151f7c75001143616d706169676e206372656174656421
     log
-    pushint 1 // 1
+    intc_1 // 1
+    return
+
+
+// smart_contracts.crowdfund.contract.Crowdfund.contribute[routing]() -> void:
+contribute:
+    // smart_contracts/crowdfund/contract.py:28
+    // @abimethod()
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    // smart_contracts/crowdfund/contract.py:30-31
+    // # Check if campaign is active
+    // assert self.active == UInt64(1), "Campaign not active"
+    intc_0 // 0
+    bytec_0 // "active"
+    app_global_get_ex
+    assert // check self.active exists
+    intc_1 // 1
+    ==
+    assert // Campaign not active
+    // smart_contracts/crowdfund/contract.py:32-33
+    // # Check if deadline has not passed
+    // assert Global.latest_timestamp < self.deadline, "Campaign deadline passed"
+    global LatestTimestamp
+    intc_0 // 0
+    bytec_1 // "deadline"
+    app_global_get_ex
+    assert // check self.deadline exists
+    <
+    assert // Campaign deadline passed
+    // smart_contracts/crowdfund/contract.py:34-35
+    // # Check minimum contribution
+    // assert amount > UInt64(0), "Contribution must be greater than 0"
+    dup
+    assert // Contribution must be greater than 0
+    // smart_contracts/crowdfund/contract.py:36-37
+    // # Update raised amount
+    // self.raised = self.raised + amount
+    intc_0 // 0
+    bytec_2 // "raised"
+    app_global_get_ex
+    assert // check self.raised exists
+    +
+    bytec_2 // "raised"
+    swap
+    app_global_put
+    // smart_contracts/crowdfund/contract.py:28
+    // @abimethod()
+    pushbytes 0x151f7c750016436f6e747269627574696f6e20616363657074656421
+    log
+    intc_1 // 1
+    return
+
+
+// smart_contracts.crowdfund.contract.Crowdfund.claim_funds[routing]() -> void:
+claim_funds:
+    // smart_contracts/crowdfund/contract.py:42-43
+    // # Check if there was ever a campaign (goal > 0)
+    // assert self.goal > UInt64(0), "No campaign exists"
+    intc_0 // 0
+    bytec_3 // "goal"
+    app_global_get_ex
+    assert // check self.goal exists
+    dup
+    assert // No campaign exists
+    // smart_contracts/crowdfund/contract.py:44-45
+    // # Check deadline has passed
+    // assert Global.latest_timestamp >= self.deadline, "Campaign still running"
+    global LatestTimestamp
+    intc_0 // 0
+    bytec_1 // "deadline"
+    app_global_get_ex
+    assert // check self.deadline exists
+    swap
+    dig 1
+    >=
+    assert // Campaign still running
+    // smart_contracts/crowdfund/contract.py:46-47
+    // # Check goal was reached
+    // assert self.raised >= self.goal, "Goal not reached"
+    intc_0 // 0
+    bytec_2 // "raised"
+    app_global_get_ex
+    assert // check self.raised exists
+    uncover 2
+    >=
+    assert // Goal not reached
+    // smart_contracts/crowdfund/contract.py:48-49
+    // # Only creator can claim
+    // assert Txn.sender == self.creator, "Only creator can claim funds"
+    txn Sender
+    intc_0 // 0
+    bytec 4 // "creator"
+    app_global_get_ex
+    assert // check self.creator exists
+    ==
+    assert // Only creator can claim funds
+    // smart_contracts/crowdfund/contract.py:50-51
+    // # Campaign must not have been cancelled (if cancelled, active would be 0 but deadline not passed)
+    // if Global.latest_timestamp < self.deadline and self.active == UInt64(0):
+    global LatestTimestamp
+    >
+    bz claim_funds_after_if_else@4
+    intc_0 // 0
+    bytec_0 // "active"
+    app_global_get_ex
+    assert // check self.active exists
+    !
+    !
+    assert // Campaign was cancelled, cannot claim
+
+claim_funds_after_if_else@4:
+    // smart_contracts/crowdfund/contract.py:54
+    // self.active = UInt64(0)
+    bytec_0 // "active"
+    intc_0 // 0
+    app_global_put
+    // smart_contracts/crowdfund/contract.py:40
+    // @abimethod()
+    pushbytes 0x151f7c75001946756e647320636c61696d65642062792063726561746f7221
+    log
+    intc_1 // 1
+    return
+
+
+// smart_contracts.crowdfund.contract.Crowdfund.refund[routing]() -> void:
+refund:
+    // smart_contracts/crowdfund/contract.py:59-60
+    // # Check if there was ever a campaign (goal > 0)
+    // assert self.goal > UInt64(0), "No campaign exists"
+    intc_0 // 0
+    bytec_3 // "goal"
+    app_global_get_ex
+    assert // check self.goal exists
+    assert // No campaign exists
+    // smart_contracts/crowdfund/contract.py:61-62
+    // # Check deadline has passed OR campaign was cancelled
+    // assert Global.latest_timestamp >= self.deadline or self.active == UInt64(0), "Campaign still running and not cancelled"
+    global LatestTimestamp
+    intc_0 // 0
+    bytec_1 // "deadline"
+    app_global_get_ex
+    assert // check self.deadline exists
+    >=
+    bnz refund_bool_true@3
+    intc_0 // 0
+    bytec_0 // "active"
+    app_global_get_ex
+    assert // check self.active exists
+    bnz refund_bool_false@4
+
+refund_bool_true@3:
+    intc_1 // 1
+
+refund_bool_merge@5:
+    // smart_contracts/crowdfund/contract.py:61-62
+    // # Check deadline has passed OR campaign was cancelled
+    // assert Global.latest_timestamp >= self.deadline or self.active == UInt64(0), "Campaign still running and not cancelled"
+    assert // Campaign still running and not cancelled
+    // smart_contracts/crowdfund/contract.py:63-64
+    // # Check goal was NOT reached
+    // assert self.raised < self.goal, "Goal was reached, no refunds"
+    intc_0 // 0
+    bytec_2 // "raised"
+    app_global_get_ex
+    assert // check self.raised exists
+    intc_0 // 0
+    bytec_3 // "goal"
+    app_global_get_ex
+    assert // check self.goal exists
+    <
+    assert // Goal was reached, no refunds
+    // smart_contracts/crowdfund/contract.py:66
+    // self.active = UInt64(0)
+    bytec_0 // "active"
+    intc_0 // 0
+    app_global_put
+    // smart_contracts/crowdfund/contract.py:57
+    // @abimethod()
+    pushbytes 0x151f7c750012526566756e647320617661696c61626c6521
+    log
+    intc_1 // 1
+    return
+
+refund_bool_false@4:
+    intc_0 // 0
+    b refund_bool_merge@5
+
+
+// smart_contracts.crowdfund.contract.Crowdfund.cancel_campaign[routing]() -> void:
+cancel_campaign:
+    // smart_contracts/crowdfund/contract.py:71-72
+    // # Check campaign is active
+    // assert self.active == UInt64(1), "No active campaign"
+    intc_0 // 0
+    bytec_0 // "active"
+    app_global_get_ex
+    assert // check self.active exists
+    intc_1 // 1
+    ==
+    assert // No active campaign
+    // smart_contracts/crowdfund/contract.py:73-74
+    // # Only creator can cancel
+    // assert Txn.sender == self.creator, "Only creator can cancel campaign"
+    txn Sender
+    intc_0 // 0
+    bytec 4 // "creator"
+    app_global_get_ex
+    assert // check self.creator exists
+    ==
+    assert // Only creator can cancel campaign
+    // smart_contracts/crowdfund/contract.py:75-76
+    // # Campaign can only be cancelled before deadline
+    // assert Global.latest_timestamp < self.deadline, "Campaign deadline already passed"
+    global LatestTimestamp
+    intc_0 // 0
+    bytec_1 // "deadline"
+    app_global_get_ex
+    assert // check self.deadline exists
+    <
+    assert // Campaign deadline already passed
+    // smart_contracts/crowdfund/contract.py:78-79
+    // # Deactivate campaign
+    // self.active = UInt64(0)
+    bytec_0 // "active"
+    intc_0 // 0
+    app_global_put
+    // smart_contracts/crowdfund/contract.py:69
+    // @abimethod()
+    pushbytes 0x151f7c75001e43616d706169676e2063616e63656c6c65642062792063726561746f7221
+    log
+    intc_1 // 1
     return
